@@ -5,7 +5,7 @@ In this project utilize an Unscented Kalman Filter to estimate the state of a mo
 
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
 
-![UKF](./UKF.gif)
+![UKF](./UKF-demo.gif)
 
 # To build and run with Term 2 Simulator
 
