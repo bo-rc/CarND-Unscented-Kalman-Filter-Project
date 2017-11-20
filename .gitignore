@@ -1,3 +1,5 @@
+# QtCreator files
+*.user
 # silly macOS
 .DS_Store
 

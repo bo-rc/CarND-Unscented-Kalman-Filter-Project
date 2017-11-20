@@ -25,6 +25,9 @@ public:
   ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
   VectorXd x_;
 
+  ///* linear process matrix
+  MatrixXd F_;
+
   ///* state covariance matrix
   MatrixXd P_;
 
@@ -33,6 +36,9 @@ public:
 
   ///* time when the state is true, in us
   long long time_us_;
+
+  ///* delta_t from last time
+  float dt;
 
   ///* Process noise standard deviation longitudinal acceleration in m/s^2
   double std_a_;
@@ -67,7 +73,6 @@ public:
   ///* Sigma point spreading parameter
   double lambda_;
 
-
   /**
    * Constructor
    */
@@ -85,16 +90,11 @@ public:
   void ProcessMeasurement(MeasurementPackage meas_package);
 
   /**
-   * Prediction Predicts sigma points, the state, and the state covariance
-   * matrix
-   * @param delta_t Time between k and k+1 in s
-   */
-  void Prediction(double delta_t);
-
-  /**
    * Updates the state and the state covariance matrix using a laser measurement
    * @param meas_package The measurement at k+1
    */
+  void Predict_CTRV(double dt);
+
   void UpdateLidar(MeasurementPackage meas_package);
 
   /**

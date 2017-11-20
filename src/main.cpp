@@ -1,9 +1,15 @@
 #include <uWS/uWS.h>
 #include <iostream>
+#include <vector>
 #include "json.hpp"
 #include <math.h>
-#include "ukf.h"
+#include "UKF_fusion.h"
+#include "Lidar.h"
+#include "Radar.h"
 #include "tools.h"
+#include <memory>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -31,14 +37,62 @@ int main()
   uWS::Hub h;
 
   // Create a Kalman Filter instance
-  UKF ukf;
+  UKF_fusion ukf;
+  // Create two sensors, a lidar and a radar
+  vector<std::unique_ptr<Sensor>> sensors;
+  sensors.push_back(std::unique_ptr<Sensor>(new Lidar()));
+  sensors.push_back(std::unique_ptr<Sensor>(new Radar()));
 
   // used to compute the RMSE later
   Tools tools;
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
 
-  h.onMessage([&ukf,&tools,&estimations,&ground_truth](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  // set parameters
+  ifstream config_file("../parm.config", std::ios::in);
+  string line;
+  while (std::getline(config_file >> std::ws, line)) {
+      stringstream buffer(line);
+      vector<string> cont;
+      string ele;
+      while (buffer >> ele) {
+	  cont.emplace_back(ele);
+      }
+
+      if (cont[0] == "std_a") {
+	  ukf.std_a = stof(cont[1]);
+      }
+
+      if (cont[0] == "std_yawdd") {
+	  ukf.std_yawdd = stof(cont[1]);
+      }
+
+      if (cont[0] == "disable_lidar") {
+	  if (1 == stoi(cont[1]))
+	    sensors[0]->disable();
+      }
+      if (cont[0] == "disable_radar") {
+	  if (1 == stoi(cont[1]))
+	    sensors[1]->disable();
+      }
+      if (cont[0] == "std_px") {
+	  dynamic_cast<Lidar*>(sensors[0].get())->set_std_px(stof(cont[1]));
+      }
+      if (cont[0] == "std_py") {
+	  dynamic_cast<Lidar*>(sensors[0].get())->set_std_py(stof(cont[1]));
+      }
+      if (cont[0] == "std_radr") {
+	  dynamic_cast<Radar*>(sensors[1].get())->set_std_radr(stof(cont[1]));
+      }
+      if (cont[0] == "std_radphi") {
+	  dynamic_cast<Radar*>(sensors[1].get())->set_std_radphi(stof(cont[1]));
+      }
+      if (cont[0] == "std_radrd") {
+	  dynamic_cast<Radar*>(sensors[1].get())->set_std_radrd(stof(cont[1]));
+      }
+  }
+
+  h.onMessage([&sensors, &ukf,&tools,&estimations,&ground_truth](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -106,36 +160,38 @@ int main()
     	  ground_truth.push_back(gt_values);
           
           //Call ProcessMeasurment(meas_package) for Kalman filter
-    	  ukf.ProcessMeasurement(meas_package);    	  
+	  ukf.ProcessMeasurement(meas_package, sensors);
+	  ukf.filter(sensors);
 
     	  //Push the current estimated x,y positon from the Kalman filter's state vector
 
     	  VectorXd estimate(4);
 
-    	  double p_x = ukf.x_(0);
-    	  double p_y = ukf.x_(1);
-    	  double v  = ukf.x_(2);
-    	  double yaw = ukf.x_(3);
+	  double px = ukf.x(0);
+	  double py = ukf.x(1);
+	  double v  = ukf.x(2);
+	  double yaw = ukf.x(3);
 
     	  double v1 = cos(yaw)*v;
     	  double v2 = sin(yaw)*v;
 
-    	  estimate(0) = p_x;
-    	  estimate(1) = p_y;
+	  estimate(0) = px;
+	  estimate(1) = py;
     	  estimate(2) = v1;
-    	  estimate(3) = v2;
+	  estimate(3) = v2;
     	  
     	  estimations.push_back(estimate);
 
     	  VectorXd RMSE = tools.CalculateRMSE(estimations, ground_truth);
 
           json msgJson;
-          msgJson["estimate_x"] = p_x;
-          msgJson["estimate_y"] = p_y;
+	  msgJson["estimate_x"] = px;
+	  msgJson["estimate_y"] = py;
           msgJson["rmse_x"] =  RMSE(0);
           msgJson["rmse_y"] =  RMSE(1);
           msgJson["rmse_vx"] = RMSE(2);
           msgJson["rmse_vy"] = RMSE(3);
+	  // cout << "(x, y) = " << px << "," << py << endl;
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
           // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
