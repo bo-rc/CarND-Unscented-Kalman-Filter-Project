@@ -32,7 +32,7 @@ __Class hierarchy__:
 This separation allows future addition of more sensors to UKF for sensor fusion.
 
 # Noise parameters
-In reality, sensor noise data may be obtained from its datasheet or testing. Here, [`param.config`](./param.config) defines the parameters. This file is read by the UKF unpon app start.
+In reality, sensor noise data may be obtained from its datasheet or testing. Here, [`parm.config`](./parm.config) defines the parameters. This file is read by the UKF unpon app start.
 
 
 ## Other Important Dependencies
