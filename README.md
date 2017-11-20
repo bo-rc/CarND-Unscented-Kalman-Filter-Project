@@ -22,12 +22,12 @@ run the Term 2 Simulator.
 # Code Structure
 
 __Class hierarchy__:
-`Lidar` and `Radar` are derived classes from `Sensor`, which is an abstract class providing common interface:
-* `enable()`/`disable()`: to make this sensor active or inactive.
-* `update_measurement()`: to receive a `MeasurementPackage` data and update the sensor's current measurement.
-* `update()`: to perform the update step for a UKF. (The predict step does not depend on sensor types so it is performed by UKF alone.)
+[`Lidar`](https://github.com/bo-rc/CarND-Unscented-Kalman-Filter-Project/blob/master/src/Lidar.h) and [`Radar`](https://github.com/bo-rc/CarND-Unscented-Kalman-Filter-Project/blob/master/src/Radar.h) are derived classes from [`Sensor`](https://github.com/bo-rc/CarND-Unscented-Kalman-Filter-Project/blob/master/src/Sensor.h), which is an abstract class providing common interface:
+* [`enable()`/`disable()`](https://github.com/bo-rc/CarND-Unscented-Kalman-Filter-Project/blob/269dc65bf18131887c3d2b3457a4d78943aa3b1c/src/Sensor.h#L23): to make this sensor active or inactive.
+* [`update_measurement()`](https://github.com/bo-rc/CarND-Unscented-Kalman-Filter-Project/blob/269dc65bf18131887c3d2b3457a4d78943aa3b1c/src/Sensor.h#L25): to receive a `MeasurementPackage` data and update the sensor's current measurement.
+* [`update()`](https://github.com/bo-rc/CarND-Unscented-Kalman-Filter-Project/blob/269dc65bf18131887c3d2b3457a4d78943aa3b1c/src/Sensor.h#L26): to perform the update step for a UKF. (The predict step does not depend on sensor types so it is performed by UKF alone.)
 
-`UKF_fusion` object keeps track of a list of available sensors, stored in a `std::vector<unique_ptr<Sensor>>`. UKF_fusion does the prediction step without sensors' involvement. The update step must be performed with sensors' knowledge, so UKF_fusion uses all sensors to update state vector `x` and the covriance matrix `P`.
+[`UKF_fusion`](https://github.com/bo-rc/CarND-Unscented-Kalman-Filter-Project/blob/master/src/UKF_fusion.h) object keeps track of a list of available sensors, stored in a `std::vector<unique_ptr<Sensor>>`. UKF_fusion does the prediction step without sensors' involvement. The update step must be performed with sensors' knowledge, so UKF_fusion uses all sensors to update state vector `x` and the covriance matrix `P`.
 
 This separation allows future addition of more sensors to UKF for sensor fusion.
 
