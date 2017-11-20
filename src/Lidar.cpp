@@ -1,13 +1,14 @@
 #include "Lidar.h"
 
 
-Lidar::Lidar()
+Lidar::Lidar():
+    Sensor()
 {
-    name = "lidar";
-    type = MeasurementPackage::SensorType::LASER;
+    name = "lidar0";
     data_dim = 2;
     std_px = 0.15;
     std_py = 0.15;
+    type = MeasurementPackage::SensorType::LASER;
     measurement = Vector2d();
     R = MatrixXd(2,2);
     R << std_px*std_px, 0,
@@ -46,9 +47,10 @@ void Lidar::update_measurement(const MeasurementPackage & meas_package)
 
     auto px = meas_package.raw_measurements_[0];
     auto py = meas_package.raw_measurements_[1];
-
     measurement << px, py;
+
     if (!is_initialized) is_initialized = true;
+
     has_new_data = true;
 }
 
@@ -57,8 +59,8 @@ void Lidar::update(UKF_fusion& ukf)
     // no new data, skip this sensor
     if (!has_new_data || !is_active) return;
 
-    int n_x = ukf.n_x;
-    int n_aug = ukf.n_x + 2;
+    int n_x = ukf.get_x_dim();
+    int n_aug = n_x + 2;
     int n_z = 2;
     VectorXd weights = ukf.weights;
     MatrixXd Xsig_pred = ukf.Xsig_pts;

@@ -14,22 +14,25 @@ UKF_fusion::UKF_fusion() :
     use_lidar(true),
     use_radar(true),
     is_initialized(false),
-    x(VectorXd(5)),
-    P(MatrixXd(5,5)),
     time_us_(0),
     dt(0),
     n_x(5),
     std_a(0.75),
     std_yawdd(0.5)
 {
-  /**
+   /* the initialization. */
+    x = VectorXd(5);
+    x << 0.6,0.6,5.0,0,0;
 
-  Complete the initialization.
+    P = MatrixXd(5,5);
+    P <<   0.00354799,  0.00154688,  0.00517556, 0.000588704,  0.00036624,
+	   0.00154688,  0.00236147,   0.0032661, 0.000584431, 0.000235127,
+	   0.00517556,   0.0032661,    0.016177,  0.00195641,  0.0023692,
+	   0.000588704, 0.000584431,  0.00195641, 0.000518974, 0.000992952,
+	   0.00036624, 0.000235127,   0.0023692, 0.000992952,   0.0047128;
 
-  */ 
-    auto n_aug = n_x + 2; // 2D noise
+    auto n_aug = n_x + 2; // 2D noise vector
     Xsig_pts = MatrixXd(n_x, 2 * n_aug + 1);
-
     lambda = 3- n_aug;
 
     weights = VectorXd(2*n_aug + 1);
@@ -40,13 +43,6 @@ UKF_fusion::UKF_fusion() :
       double weight = 0.5/(n_aug+lambda);
       weights(i) = weight;
     }
-
-    x << 0.6,0.6,5.0,0,0;
-    P <<   0.00354799,  0.00154688,  0.00517556, 0.000588704,  0.00036624,
-	   0.00154688,  0.00236147,   0.0032661, 0.000584431, 0.000235127,
-	   0.00517556,   0.0032661,    0.016177,  0.00195641,  0.0023692,
-	   0.000588704, 0.000584431,  0.00195641, 0.000518974, 0.000992952,
-	   0.00036624, 0.000235127,   0.0023692, 0.000992952,   0.0047128;
 }
 
 UKF_fusion::~UKF_fusion() {}
@@ -56,16 +52,15 @@ UKF_fusion::~UKF_fusion() {}
  * either radar or laser.
  */
 void UKF_fusion::ProcessMeasurement(const MeasurementPackage& meas_package, vector<std::unique_ptr<Sensor>>& sensors) {
-  /**
-
-  Complete this function! Make sure you switch between lidar and radar
-  measurements.
-  */
 
     if (!is_initialized) {
 	time_us_ = meas_package.timestamp_;
 	is_initialized = true;
+	return;
     }
+
+    if (meas_package.sensor_type_ == MeasurementPackage::SensorType::LASER && !use_lidar) return;
+    if (meas_package.sensor_type_ == MeasurementPackage::SensorType::RADAR && !use_radar) return;
 
     dt = (meas_package.timestamp_ - time_us_) / 1000000.0; // dt in seconds
     time_us_ = meas_package.timestamp_;
@@ -223,4 +218,49 @@ void UKF_fusion::filter(vector<std::unique_ptr<Sensor>>& sensors)
 {
     predict();
     update(sensors);
+}
+
+void UKF_fusion::enable_lidar()
+{
+    use_lidar = true;
+}
+
+void UKF_fusion::enable_radar()
+{
+    use_radar = true;
+}
+
+void UKF_fusion::disable_lidar()
+{
+    use_lidar = false;
+}
+
+void UKF_fusion::disable_radar()
+{
+    use_radar = false;
+}
+
+bool UKF_fusion::is_use_lidar()
+{
+    return use_lidar;
+}
+
+bool UKF_fusion::is_use_radar()
+{
+    return use_radar;
+}
+
+void UKF_fusion::set_std_a(float val)
+{
+    std_a = val;
+}
+
+void UKF_fusion::set_std_yawdd(float val)
+{
+    std_yawdd = val;
+}
+
+int UKF_fusion::get_x_dim()
+{
+    return n_x;
 }

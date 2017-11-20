@@ -13,14 +13,9 @@ class UKF_fusion;
 
 class Sensor {
 public:
-    Sensor() {}
-    virtual ~Sensor() {}
+    Sensor();
+    virtual ~Sensor();
 
-    std::string name;
-    bool is_initialized;
-    bool is_active;
-    bool has_new_data;
-    int data_dim;
     VectorXd measurement;
     MatrixXd R;
     MeasurementPackage::SensorType type;
@@ -30,7 +25,12 @@ public:
     virtual void update_measurement(const MeasurementPackage& meas_package) = 0;
     virtual void update(UKF_fusion& ukf) = 0;
 
-    const double PI = 3.14159265;
+protected:
+    std::string name;
+    bool is_initialized;
+    bool is_active;
+    bool has_new_data;
+    int data_dim;
 };
 
 #endif /* SENSOR_H_ */

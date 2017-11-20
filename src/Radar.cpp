@@ -4,20 +4,24 @@ using std::cout;
 using std::endl;
 
 
-Radar::Radar()
+Radar::Radar():
+    Sensor()
 {
-    name = "radar";
-    type = MeasurementPackage::SensorType::RADAR;
+    name = "radar0";
     data_dim = 3;
     std_radr = 0.3;
-    std_radphi = 0.0175;
-    std_radrd = 0.1;
+    std_radphi = 0.03;
+    std_radrd = 0.3;
+
+    type = MeasurementPackage::SensorType::RADAR;
+
     measurement = Vector3d();
 
     R = MatrixXd(3,3);
     R << std_radr*std_radr, 0, 0,
 	 0, std_radphi*std_radphi, 0,
 	 0, 0, std_radrd*std_radrd;
+
     enable();
 }
 
@@ -63,7 +67,9 @@ void Radar::update_measurement(const MeasurementPackage &meas_package)
     while(phi < -M_PI) phi += 2.*M_PI;
 
     measurement << rho, phi, rho_dot;
+
     if (!is_initialized) is_initialized = true;
+
     has_new_data = true;
 }
 
@@ -72,8 +78,8 @@ void Radar::update(UKF_fusion& ukf)
     // no new data, skip this sensor
     if (!has_new_data || !is_active) return;
 
-    int n_x = ukf.n_x;
-    int n_aug = ukf.n_x + 2;
+    int n_x = ukf.get_x_dim();
+    int n_aug = n_x + 2;
     int n_z = 3;
     VectorXd weights = ukf.weights;
     MatrixXd Xsig_pred = ukf.Xsig_pts;

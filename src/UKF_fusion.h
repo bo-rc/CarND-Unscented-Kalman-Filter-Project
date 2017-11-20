@@ -19,10 +19,6 @@ using std::vector;
 class Sensor;
 class UKF_fusion {
 public:
-    bool use_lidar;
-    bool use_radar;
-    bool is_initialized;
-
     ///* state vector: px, py, v, phi, phi_dot
     VectorXd x;
 
@@ -32,26 +28,8 @@ public:
     ///* Generated sigma points matrix
     MatrixXd Xsig_pts;
 
-    ///* time when the state is true, in us
-    long long time_us_;
-
-    ///* delta_t from last time
-    float dt;
-
-    ///* Process noise standard deviation longitudinal acceleration in m/s^2
-    double std_a;
-
-    ///* Process noise standard deviation yaw acceleration in rad/s^2
-    double std_yawdd;
-
     ///* Weights of sigma points
     VectorXd weights;
-
-    ///* State dimension
-    int n_x;
-
-    ///* Sigma point spreading parameter
-    double lambda;
 
     /**
      * Constructor
@@ -79,6 +57,31 @@ public:
     void predict();
     void update(vector<std::unique_ptr<Sensor>>& sensors);
     void filter(vector<std::unique_ptr<Sensor>>& sensors);
+
+    void enable_lidar();
+    void enable_radar();
+    void disable_lidar();
+    void disable_radar();
+    bool is_use_lidar();
+    bool is_use_radar();
+    int get_x_dim();
+
+    void set_std_a(float val);
+    void set_std_yawdd(float val);
+private:
+    bool use_lidar;
+    bool use_radar;
+    bool is_initialized;
+    long long time_us_; // system time in microseconds
+    float dt;
+    ///* State dimension
+    int n_x;
+    ///* Process noise standard deviation longitudinal acceleration in m/s^2
+    double std_a;
+    ///* Process noise standard deviation yaw acceleration in rad/s^2
+    double std_yawdd;
+    ///* Sigma point spreading parameter
+    double lambda;
 };
 
 #endif /* UKF_FUSION_H */
