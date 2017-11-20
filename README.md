@@ -27,6 +27,8 @@ __Class hierarchy__:
 
 `UKF_fusion` object keeps track of a list of available sensors, stored in a `std::vector<unique_ptr<Sensor>>`. UKF_fusion does the prediction step without sensors' involvement. The update step must be performed with sensors' knowledge, so UKF_fusion uses all sensors to update state vector `x` and the covriance matrix `P`.
 
+This separation allows future addition of more sensors to UKF for sensor fusion.
+
 ## Other Important Dependencies
 * cmake >= 3.5
   * All OSes: [click here for installation instructions](https://cmake.org/install/)
